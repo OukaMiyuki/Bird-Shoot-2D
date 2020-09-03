@@ -8,17 +8,21 @@ public class Bird : MonoBehaviour {
     private float _timeSittingAround;
 
     [SerializeField] private float _launchPower = 500;
+    [SerializeField] private float xRange = 13f;
 
     private void Awake() {
         _initialPosition = transform.position; //get the current transform of the bird object (first transform when it hasn't been launched yet)
     }
 
     private void Update() {
+        GetComponent<LineRenderer>().SetPosition(0, transform.position);
+        GetComponent<LineRenderer>().SetPosition(1, _initialPosition);
+
         if (_birdWasLaunched && GetComponent<Rigidbody2D>().velocity.magnitude <= 0.1) { //if the bird has already been launched or in other words, it's on the ground
             _timeSittingAround += Time.deltaTime; //count the time to load the next scene, it's the same as when you load scene then put a time on it (using invoke Invoke("loadScene", 2f);)
         }
 
-        if (transform.position.y > 10 || transform.position.y < -10 || transform.position.x > 10 || transform.position.x < -10 || _timeSittingAround > 3) { //load scene when bird go beyond the y axes limit and x axes lmit and also when the bird hit the gound or already launched
+        if (transform.position.y > 20 || transform.position.y < -20 || transform.position.x > 160 || transform.position.x < -160 || _timeSittingAround > 3) { //load scene when bird go beyond the y axes limit and x axes lmit and also when the bird hit the gound or already launched
             string currentSceneName = SceneManager.GetActiveScene().name; //get the active scene
             SceneManager.LoadScene(currentSceneName); //load the scene based on the active one
         }
@@ -26,11 +30,14 @@ public class Bird : MonoBehaviour {
 
     private void OnMouseDown() { //event when mouse is clicked
         GetComponent<SpriteRenderer>().color = Color.red; //change the color of the sprite to red
+        GetComponent<LineRenderer>().enabled = true; //set the line rendere to true when it clicked
     }
 
     private void OnMouseDrag() { //event when mouse is dragged after it's clicked
         Vector3 newPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition); // to get the screeen to world position of mouse position  (screen to world is basically the distance betweeen the camera and the world, without this your bird will be put behind the backgound when you drag it)
-        transform.position = new Vector3(newPosition.x, newPosition.y, 0); //set the nye transform position when it dragged to (x, y, and z) why z is 0? because in 2d game you only need to move up, down and left to right you don't need to concern about the z position unless it's a 3D game
+        float clampedXPos = Mathf.Clamp(newPosition.x, -xRange, xRange);
+        float clampedYPos = Mathf.Clamp(newPosition.y, -10f, -3f);
+        transform.position = new Vector3(clampedXPos, clampedYPos, 0); //set the nye transform position when it dragged to (x, y, and z) why z is 0? because in 2d game you only need to move up, down and left to right you don't need to concern about the z position unless it's a 3D game
     }
 
     private void OnMouseUp() { //event when mouse is released
@@ -39,5 +46,6 @@ public class Bird : MonoBehaviour {
         GetComponent<Rigidbody2D>().AddForce(directionToInitialPosition * _launchPower); // multiply it with _launchPower to determine how much power for the force
         GetComponent<Rigidbody2D>().gravityScale = 1; //set the gravity scale back to 1 so the bird will fall down after it's launched
         _birdWasLaunched = true; // set the bird launched to true, so it'll know that the bird has been launched or in the ground (line 17)
+        GetComponent<LineRenderer>().enabled = false; //set the line renderer to false or disable it after the mouse is releashed
     }
 }
